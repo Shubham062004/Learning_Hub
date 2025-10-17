@@ -1,31 +1,73 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+// import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GraduationCap, User, Mail, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    phone: ""
   });
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log("Register:", formData);
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { confirmPassword, ...userData } = formData;
+      await register(userData);
+      toast.success("Registration successful!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleSignup = () => {
-    // Handle Google signup
-    console.log("Google signup");
+  const handleGoogleSignup = async () => {
+    try {
+      toast.success("Google registration will be implemented soon!");
+      
+      // For demo purposes, create a sample account
+      const demoData = {
+        name: 'Google User Demo',
+        email: `demo${Date.now()}@gmail.com`,
+        password: 'google123',
+        phone: '1234567890'
+      };
+      
+      await register(demoData);
+      toast.success("Demo Account Created! Welcome to Learning Hub!");
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || "Google registration failed");
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +126,22 @@ export const Register = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="1234567890"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -129,8 +187,8 @@ export const Register = () => {
                 </span>
               </div>
 
-              <Button type="submit" className="w-full gap-2" size="lg">
-                Create Account
+              <Button type="submit" className="w-full gap-2" size="lg" disabled={loading}>
+                {loading ? "Creating Account..." : "Create Account"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
@@ -145,7 +203,7 @@ export const Register = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full gap-2"
+              className="w-full gap-2 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
               size="lg"
               onClick={handleGoogleSignup}
             >

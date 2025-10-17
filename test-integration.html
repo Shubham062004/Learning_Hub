@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oven Express - Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🍕 Oven Express - Integration Test</h1>
+    
+    <div class="test">
+        <h3>Backend Connection Test</h3>
+        <button onclick="testBackend()">Test Backend</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Menu API Test</h3>
+        <button onclick="testMenu()">Test Menu API</button>
+        <div id="menu-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Authentication Test</h3>
+        <button onclick="testAuth()">Test Login</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Frontend Connection Test</h3>
+        <button onclick="testFrontend()">Test Frontend</button>
+        <div id="frontend-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        async function testBackend() {
+            const result = document.getElementById('backend-result');
+            try {
+                const response = await fetch(`${API_BASE}/test`);
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Backend is working!<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Backend connection failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testMenu() {
+            const result = document.getElementById('menu-result');
+            try {
+                const response = await fetch(`${API_BASE}/menu`);
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Menu API working! Found ${data.menuItems.length} items<br><pre>${JSON.stringify(data.menuItems.slice(0, 2), null, 2)}</pre></div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Menu API failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testAuth() {
+            const result = document.getElementById('auth-result');
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@ovenexpress.com',
+                        password: 'admin123'
+                    })
+                });
+                const data = await response.json();
+                if (data.token) {
+                    result.innerHTML = `<div class="success">✅ Authentication working!<br><pre>${JSON.stringify({message: data.message, user: data.user}, null, 2)}</pre></div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Authentication failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Authentication test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testFrontend() {
+            const result = document.getElementById('frontend-result');
+            try {
+                const response = await fetch('http://localhost:5173');
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ Frontend is running on http://localhost:5173</div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Frontend not accessible</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Frontend connection failed: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            testBackend();
+            testMenu();
+            testAuth();
+        };
+    </script>
+</body>
+</html>
